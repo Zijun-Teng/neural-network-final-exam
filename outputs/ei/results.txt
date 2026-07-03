@@ -1,0 +1,13 @@
+E-I Hopf verification
+Parameters: tauE=1, MEE=2, MEI=4, MIE=1, MII=1, hE=0.5, hI=0
+Critical tauI: 2
+Active-active branch for hE>0: vE*=hE, vI*=hE/2; Jacobian is independent of hE.
+tauI,lambda1,lambda2,final_vE,final_vI
+1.5,-0.166667+1.142609i,-0.166667-1.142609i,0.500000,0.250000
+2.0,0.000000+1.000000i,0.000000-1.000000i,0.322174,0.201251
+2.5,0.100000+0.888819i,0.100000-0.888819i,0.088545,0.100424
+hE,branch_vE,branch_vI,admissible
+-0.2,-0.200000,-0.100000,False
+0.0,0.000000,0.000000,False
+0.5,0.500000,0.250000,True
+1.0,1.000000,0.500000,True

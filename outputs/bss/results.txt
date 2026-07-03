@@ -1,0 +1,9 @@
+Blind source separation experiment
+Sampling rate: 8000 Hz
+Samples per channel: 50000
+Files: 110000001mix1.wav, 110000001mix2.wav, 110000001mix3.wav
+
+method,mean_abs_offdiag_corr,kurtosis_1,kurtosis_2,kurtosis_3,mean_abs_kurtosis
+mixtures,0.001717,0.339029,0.331496,0.375620,0.348715
+PCA whitening,0.000000,0.701396,0.438529,0.501416,0.547114
+FastICA,0.000000,1.267380,1.194697,0.928770,1.130282

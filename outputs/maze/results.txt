@@ -1,0 +1,9 @@
+Maze reinforcement learning experiment
+Grid size: 520 x 392 pixels
+Free cells: 159283
+Start (x,y): (507, 354)
+Goal (x,y): (264, 193)
+Reachable: True
+BFS shortest path length: 5730
+Reported path length: 5730
+Value-iteration fallback to BFS policy extraction: False
