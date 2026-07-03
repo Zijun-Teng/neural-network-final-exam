@@ -74,6 +74,17 @@ python scripts/maze_rl.py
 
 Each script writes figures and numerical summaries under `outputs/`.
 
+## Push to GitHub
+
+This directory is already initialized as a local Git repository. If the remote repository has not been pushed yet, run:
+
+```bash
+git remote set-url origin https://github.com/Zijun-Teng/neural-network-final-exam.git
+git push -u origin main
+```
+
+GitHub may ask for authentication. For HTTPS push, use a GitHub personal access token instead of an account password if prompted.
+
 ## Main Numerical Results
 
 ### Problem 3: E-I Hopf Bifurcation
