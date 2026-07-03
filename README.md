@@ -136,21 +136,26 @@ The empirical MSE is close to the Cramér-Rao lower bound, consistent with the a
 Compared methods:
 
 - PCA whitening
+- AMUSE / time-delayed decorrelation
 - FastICA
 
 No ground-truth sources are provided, so no-reference quality indicators are used:
 
-| Method | Mean absolute off-diagonal correlation | Mean absolute kurtosis |
-| --- | ---: | ---: |
-| Mixtures | 0.001717 | 0.348715 |
-| PCA whitening | 0.000000 | 0.547114 |
-| FastICA | 0.000000 | 1.130282 |
+| Method | Mean absolute off-diagonal correlation | Mean absolute lag-1 off-diagonal correlation | Mean absolute kurtosis |
+| --- | ---: | ---: | ---: |
+| Mixtures | 0.001717 | 0.218067 | 0.348715 |
+| PCA whitening | 0.000000 | 0.179331 | 0.547114 |
+| AMUSE | 0.000000 | 0.002527 | 1.125404 |
+| FastICA | 0.000000 | 0.003157 | 1.130282 |
 
-FastICA preserves decorrelation while increasing non-Gaussianity, giving a better separation according to ICA assumptions.
+AMUSE strongly reduces time-lagged cross-dependence, while FastICA gives the highest marginal non-Gaussianity. Both are clearly stronger than PCA whitening, which only removes instantaneous second-order correlation.
 
 Generated files:
 
 - `outputs/bss/waveforms.png`
+- `outputs/bss/amuse_source_1.wav`
+- `outputs/bss/amuse_source_2.wav`
+- `outputs/bss/amuse_source_3.wav`
 - `outputs/bss/fastica_source_1.wav`
 - `outputs/bss/fastica_source_2.wav`
 - `outputs/bss/fastica_source_3.wav`
