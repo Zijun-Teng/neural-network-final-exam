@@ -79,11 +79,11 @@ Each script writes figures and numerical summaries under `outputs/`.
 This directory is already initialized as a local Git repository. If the remote repository has not been pushed yet, run:
 
 ```bash
-git remote set-url origin https://github.com/Zijun-Teng/neural-network-final-exam.git
+git remote set-url origin git@github.com:Zijun-Teng/neural-network-final-exam.git
 git push -u origin main
 ```
 
-GitHub may ask for authentication. For HTTPS push, use a GitHub personal access token instead of an account password if prompted.
+GitHub may ask for authentication. For SSH push, make sure the public key on this machine has been added to the GitHub account or has access to this repository.
 
 ## Main Numerical Results
 
