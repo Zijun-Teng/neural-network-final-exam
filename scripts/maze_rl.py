@@ -112,13 +112,18 @@ def default_goal_cases(free, start):
             break
 
     wall = None
-    for y in range(30, free.shape[0] - 30):
-        for x in range(30, free.shape[1] - 30):
-            if not free[y, x]:
-                wall = (x, y)
-                break
-        if wall is not None:
+    for x, y in ((100, 100), (50, 50), (250, 120)):
+        if 0 <= x < free.shape[1] and 0 <= y < free.shape[0] and not free[y, x]:
+            wall = (x, y)
             break
+    if wall is None:
+        for y in range(30, free.shape[0] - 30):
+            for x in range(30, free.shape[1] - 30):
+                if not free[y, x]:
+                    wall = (x, y)
+                    break
+            if wall is not None:
+                break
     cases.append(("blocked-wall", wall))
     return cases
 
@@ -251,7 +256,7 @@ def solve_goal(free, start, goal_xy):
     return result
 
 
-def draw_path(crop, path, start, goal, path_bfs):
+def draw_path(crop, path, start, goal, path_bfs, path_name="maze_path.png", color=(230, 50, 40)):
     img = Image.fromarray(crop).convert("RGB")
     draw = ImageDraw.Draw(img)
     if path_bfs:
@@ -259,12 +264,29 @@ def draw_path(crop, path, start, goal, path_bfs):
         draw.line(pts, fill=(30, 144, 255), width=2)
     if path:
         pts = [(x, y) for y, x in path]
-        draw.line(pts, fill=(230, 50, 40), width=2)
+        draw.line(pts, fill=color, width=3)
     sy, sx = start
     gy, gx = goal
     draw.ellipse((sx - 5, sy - 5, sx + 5, sy + 5), fill=(255, 220, 0), outline=(0, 0, 0))
     draw.ellipse((gx - 5, gy - 5, gx + 5, gy + 5), fill=(0, 200, 90), outline=(0, 0, 0))
-    img.save(OUT / "maze_path.png")
+    img.save(OUT / path_name)
+
+
+def draw_invalid_goals(crop, start, results):
+    img = Image.fromarray(crop).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    sy, sx = start
+    draw.ellipse((sx - 6, sy - 6, sx + 6, sy + 6), fill=(255, 220, 0), outline=(0, 0, 0))
+    colors = {"unreachable": (148, 103, 189), "blocked_or_wall": (255, 127, 14)}
+    for result in results:
+        if result["reachable"]:
+            continue
+        x, y = result["goal_xy"]
+        if 0 <= x < crop.shape[1] and 0 <= y < crop.shape[0]:
+            color = colors.get(result["status"], (214, 39, 40))
+            draw.line((x - 8, y - 8, x + 8, y + 8), fill=color, width=4)
+            draw.line((x - 8, y + 8, x + 8, y - 8), fill=color, width=4)
+    img.save(OUT / "maze_invalid_goals.png")
 
 
 def draw_multi_paths(crop, start, results):
@@ -302,11 +324,25 @@ def main():
         results.append(result)
 
     reachable_results = [r for r in results if r["reachable"]]
+    colors = [(230, 50, 40), (245, 140, 30), (125, 85, 200)]
     if reachable_results:
+        for idx, result in enumerate(reachable_results):
+            goal_yx = (result["goal_xy"][1], result["goal_xy"][0])
+            safe_label = result["label"].replace("-", "_")
+            draw_path(
+                crop,
+                result["path"],
+                start,
+                goal_yx,
+                bfs(free, start, goal_yx),
+                path_name=f"maze_path_{safe_label}.png",
+                color=colors[idx % len(colors)],
+            )
         first = reachable_results[0]
-        goal_yx = (first["goal_xy"][1], first["goal_xy"][0])
-        draw_path(crop, first["path"], start, goal_yx, bfs(free, start, goal_yx))
+        first_goal_yx = (first["goal_xy"][1], first["goal_xy"][0])
+        draw_path(crop, first["path"], start, first_goal_yx, bfs(free, start, first_goal_yx))
     draw_multi_paths(crop, start, results)
+    draw_invalid_goals(crop, start, results)
 
     lines = [
         "Maze reinforcement learning experiment",

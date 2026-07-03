@@ -181,7 +181,7 @@ reachable-near,322,135,reachable,440,440
 reachable-mid,169,332,reachable,1980,1980
 reachable-far,278,207,reachable,5730,5730
 unreachable-free,33,32,unreachable,NA,NA
-blocked-wall,32,30,blocked_or_wall,NA,NA
+blocked-wall,100,100,blocked_or_wall,NA,NA
 ```
 
 For all reachable goals, the Bellman optimal policy reaches the same length as the independent BFS shortest-path check. Invalid or unreachable goals are reported without producing a fake path.
@@ -189,6 +189,10 @@ For all reachable goals, the Bellman optimal policy reaches the same length as t
 Generated files:
 
 - `outputs/maze/maze_path.png`
+- `outputs/maze/maze_path_reachable_near.png`
+- `outputs/maze/maze_path_reachable_mid.png`
+- `outputs/maze/maze_path_reachable_far.png`
+- `outputs/maze/maze_invalid_goals.png`
 - `outputs/maze/maze_paths_multi_goal.png`
 
 ## Notes

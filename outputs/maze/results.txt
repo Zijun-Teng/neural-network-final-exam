@@ -8,4 +8,4 @@ reachable-near,322,135,reachable,440,440,False
 reachable-mid,169,332,reachable,1980,1980,False
 reachable-far,278,207,reachable,5730,5730,False
 unreachable-free,33,32,unreachable,NA,NA,NA
-blocked-wall,32,30,blocked_or_wall,NA,NA,NA
+blocked-wall,100,100,blocked_or_wall,NA,NA,NA
