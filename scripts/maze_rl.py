@@ -37,8 +37,7 @@ def load_grid():
     free[yellow] = True
 
     start = nearest_free(free, (sy, sx))
-    goal = farthest_reachable(free, start)
-    return crop, free, start, goal
+    return crop, free, start
 
 
 def nearest_free(free, seed):
@@ -76,6 +75,52 @@ def farthest_reachable(free, start):
                 dist[nb] = dist[(y, x)] + 1
                 q.append(nb)
     return farthest
+
+
+def reachable_distances(free, start):
+    q = deque([start])
+    dist = {start: 0}
+    while q:
+        y, x = q.popleft()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nb = (y + dy, x + dx)
+            if (
+                0 <= nb[0] < free.shape[0]
+                and 0 <= nb[1] < free.shape[1]
+                and free[nb]
+                and nb not in dist
+            ):
+                dist[nb] = dist[(y, x)] + 1
+                q.append(nb)
+    return dist
+
+
+def default_goal_cases(free, start):
+    dist = reachable_distances(free, start)
+    ordered = sorted(dist.items(), key=lambda item: item[1])
+    fractions = [0.10, 0.50, 1.00]
+    cases = []
+    for label, frac in zip(("reachable-near", "reachable-mid", "reachable-far"), fractions):
+        y, x = ordered[int((len(ordered) - 1) * frac)][0]
+        cases.append((label, (x, y)))
+
+    ys, xs = np.where(free)
+    for y, x in zip(ys, xs):
+        y, x = int(y), int(x)
+        if (y, x) not in dist and 30 < x < free.shape[1] - 30 and 30 < y < free.shape[0] - 30:
+            cases.append(("unreachable-free", (x, y)))
+            break
+
+    wall = None
+    for y in range(30, free.shape[0] - 30):
+        for x in range(30, free.shape[1] - 30):
+            if not free[y, x]:
+                wall = (x, y)
+                break
+        if wall is not None:
+            break
+    cases.append(("blocked-wall", wall))
+    return cases
 
 
 def bfs(free, start, goal):
@@ -161,6 +206,51 @@ def greedy_path(q, free, start, goal, max_steps=10000):
     return None
 
 
+def solve_goal(free, start, goal_xy):
+    x, y = goal_xy
+    h, w = free.shape
+    result = {
+        "goal_xy": goal_xy,
+        "status": "",
+        "reachable": False,
+        "path": None,
+        "bfs_length": None,
+        "bellman_length": None,
+        "used_fallback": None,
+    }
+    if not (0 <= x < w and 0 <= y < h):
+        result["status"] = "out_of_bounds"
+        return result
+    goal = (y, x)
+    if not free[goal]:
+        result["status"] = "blocked_or_wall"
+        return result
+
+    path_bfs = bfs(free, start, goal)
+    if path_bfs is None:
+        result["status"] = "unreachable"
+        return result
+
+    q = value_iteration(free, goal)
+    path_rl = greedy_path(q, free, start, goal, max_steps=max(10000, free.size))
+    used_fallback = False
+    if path_rl is None or path_rl[-1] != goal or len(path_rl) != len(path_bfs):
+        path_rl = path_bfs
+        used_fallback = True
+
+    result.update(
+        {
+            "status": "reachable",
+            "reachable": True,
+            "path": path_rl,
+            "bfs_length": len(path_bfs) - 1,
+            "bellman_length": len(path_rl) - 1,
+            "used_fallback": used_fallback,
+        }
+    )
+    return result
+
+
 def draw_path(crop, path, start, goal, path_bfs):
     img = Image.fromarray(crop).convert("RGB")
     draw = ImageDraw.Draw(img)
@@ -177,29 +267,63 @@ def draw_path(crop, path, start, goal, path_bfs):
     img.save(OUT / "maze_path.png")
 
 
+def draw_multi_paths(crop, start, results):
+    img = Image.fromarray(crop).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    colors = [
+        (230, 50, 40),
+        (31, 119, 180),
+        (44, 160, 44),
+        (148, 103, 189),
+        (255, 127, 14),
+    ]
+    for idx, result in enumerate(results):
+        x, y = result["goal_xy"]
+        color = colors[idx % len(colors)]
+        if result["path"]:
+            pts = [(px, py) for py, px in result["path"]]
+            draw.line(pts, fill=color, width=2)
+            draw.ellipse((x - 5, y - 5, x + 5, y + 5), fill=color, outline=(0, 0, 0))
+        elif 0 <= x < crop.shape[1] and 0 <= y < crop.shape[0]:
+            draw.line((x - 6, y - 6, x + 6, y + 6), fill=color, width=3)
+            draw.line((x - 6, y + 6, x + 6, y - 6), fill=color, width=3)
+    sy, sx = start
+    draw.ellipse((sx - 6, sy - 6, sx + 6, sy + 6), fill=(255, 220, 0), outline=(0, 0, 0))
+    img.save(OUT / "maze_paths_multi_goal.png")
+
+
 def main():
-    crop, free, start, goal = load_grid()
-    path_bfs = bfs(free, start, goal)
-    q = value_iteration(free, goal)
-    path_rl = greedy_path(q, free, start, goal)
-    if path_rl is None or path_rl[-1] != goal or (path_bfs and len(path_rl) > len(path_bfs)):
-        path_rl = path_bfs
-        used_fallback = True
-    else:
-        used_fallback = False
-    draw_path(crop, path_rl, start, goal, path_bfs)
+    crop, free, start = load_grid()
+    cases = default_goal_cases(free, start)
+    results = []
+    for label, goal_xy in cases:
+        result = solve_goal(free, start, goal_xy)
+        result["label"] = label
+        results.append(result)
+
+    reachable_results = [r for r in results if r["reachable"]]
+    if reachable_results:
+        first = reachable_results[0]
+        goal_yx = (first["goal_xy"][1], first["goal_xy"][0])
+        draw_path(crop, first["path"], start, goal_yx, bfs(free, start, goal_yx))
+    draw_multi_paths(crop, start, results)
 
     lines = [
         "Maze reinforcement learning experiment",
         f"Grid size: {free.shape[1]} x {free.shape[0]} pixels",
         f"Free cells: {int(free.sum())}",
         f"Start (x,y): ({start[1]}, {start[0]})",
-        f"Goal (x,y): ({goal[1]}, {goal[0]})",
-        f"Reachable: {path_bfs is not None}",
-        f"BFS shortest path length: {len(path_bfs) - 1 if path_bfs else 'NA'}",
-        f"Reported path length: {len(path_rl) - 1 if path_rl else 'NA'}",
-        f"Value-iteration fallback to BFS policy extraction: {used_fallback}",
+        "",
+        "label,goal_x,goal_y,status,bfs_length,bellman_length,used_fallback",
     ]
+    for result in results:
+        x, y = result["goal_xy"]
+        lines.append(
+            f"{result['label']},{x},{y},{result['status']},"
+            f"{result['bfs_length'] if result['bfs_length'] is not None else 'NA'},"
+            f"{result['bellman_length'] if result['bellman_length'] is not None else 'NA'},"
+            f"{result['used_fallback'] if result['used_fallback'] is not None else 'NA'}"
+        )
     (OUT / "results.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 

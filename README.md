@@ -169,22 +169,27 @@ The maze image is converted to a deterministic grid-world MDP:
 - yellow dot: start state
 - actions: up, down, left, right
 
-Result:
+The solver accepts arbitrary goal coordinates. In the default experiment, it tests three reachable goals, one free but disconnected goal, and one wall cell:
 
 ```text
 grid size = 520 x 392
 free states = 159283
 start = (507, 354)
-goal = (264, 193)
-BFS shortest path length = 5730
-Bellman policy path length = 5730
+
+label,goal_x,goal_y,status,bfs_length,bellman_length
+reachable-near,322,135,reachable,440,440
+reachable-mid,169,332,reachable,1980,1980
+reachable-far,278,207,reachable,5730,5730
+unreachable-free,33,32,unreachable,NA,NA
+blocked-wall,32,30,blocked_or_wall,NA,NA
 ```
 
-The Bellman optimal policy reaches the same length as the independent BFS shortest-path check.
+For all reachable goals, the Bellman optimal policy reaches the same length as the independent BFS shortest-path check. Invalid or unreachable goals are reported without producing a fake path.
 
-Generated file:
+Generated files:
 
 - `outputs/maze/maze_path.png`
+- `outputs/maze/maze_paths_multi_goal.png`
 
 ## Notes
 

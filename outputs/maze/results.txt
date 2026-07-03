@@ -2,8 +2,10 @@ Maze reinforcement learning experiment
 Grid size: 520 x 392 pixels
 Free cells: 159283
 Start (x,y): (507, 354)
-Goal (x,y): (264, 193)
-Reachable: True
-BFS shortest path length: 5730
-Reported path length: 5730
-Value-iteration fallback to BFS policy extraction: False
+
+label,goal_x,goal_y,status,bfs_length,bellman_length,used_fallback
+reachable-near,322,135,reachable,440,440,False
+reachable-mid,169,332,reachable,1980,1980,False
+reachable-far,278,207,reachable,5730,5730,False
+unreachable-free,33,32,unreachable,NA,NA,NA
+blocked-wall,32,30,blocked_or_wall,NA,NA,NA
